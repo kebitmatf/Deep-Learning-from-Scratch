@@ -94,7 +94,7 @@ def deep_model_forward(X, params, activations, keep_probs):
         caches.append(cache)
         
         if keep_probs[l] < 1.0: # Drop out
-            D = np.random.randn(A.shape[0], A.shape[1])
+            D = np.random.rand(A.shape[0], A.shape[1])
             D = (D < 1.0)
             A = np.multiply(A,D)
             A = A/keep_probs[l]
