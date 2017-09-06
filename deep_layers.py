@@ -90,15 +90,16 @@ def deep_model_forward(X, params, activations, keep_probs):
     
     for l in range(0, L):
         A_prev = A
-        A, cache = layer_forward(A_prev, params['W' + str(l+1)], params['b' + str(l+1)], activations[l])
-        caches.append(cache)
-        
+        A, cache = layer_forward(A_prev, params['W' + str(l+1)], params['b' + str(l+1)], activations[l])        
+        D = None
         if keep_probs[l] < 1.0: # Drop out
             D = np.random.rand(A.shape[0], A.shape[1])
             D = (D < 1.0)
             A = np.multiply(A,D)
             A = A/keep_probs[l]
 
+        cache = (cache, D)
+        caches.append(cache)
     return A, caches
 
 def compute_cost(AL, Y, params, lamda = 0.0):
@@ -124,10 +125,12 @@ def deep_model_backward(AL, Y, caches, activations, params, keep_probs, lamda = 
     
     dA = dAL
     for l in reversed(range(L)):
-        dA, grads['dW' + str(l+1)], grads['db' + str(l+1)] = layer_backward(dA, caches[l], activations[l])
+        cache, D = caches[l]
+        dA, grads['dW' + str(l+1)], grads['db' + str(l+1)] = layer_backward(dA, cache, activations[l])
         if lamda !=0: # Regularization
             grads['dW' + str(l+1)] += lamda/m * params['W' + str(l+1)]
         elif keep_probs[l] < 1.0: # Drop out
+            dA = dA * D
             dA /= keep_probs[l]
             
     return grads
